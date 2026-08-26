@@ -93,3 +93,10 @@
 - [x] Adicionar controle lateral com gráfico comparativo por empresa
 - [x] Respeitar mês/ano selecionados e registrar estado sem CNPJ identificado
 - [x] Testar classificação, cálculos, filtros e responsividade da nova seção — teste UI passou com agosto, setembro e documento sem empresa
+
+## Upload múltiplo de notas fiscais
+
+- [x] Permitir selecionar vários PDFs de notas fiscais em uma única ação
+- [x] Processar todos os PDFs selecionados e atualizar totais, empresas e histórico
+- [x] Exibir feedback de progresso e erros parciais sem interromper os demais arquivos
+- [x] Testar upload múltiplo, classificação, soma automática e responsividade

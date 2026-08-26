@@ -9,13 +9,11 @@ page.on('pageerror', (error) => console.log('[page-error]', error.message));
 await page.goto(url, { waitUntil: 'networkidle' });
 const noteInput = page.locator('input[type=file]').nth(2);
 if (await page.locator('input[type=file]').count() < 3) throw new Error('Input de nota fiscal não encontrado');
-async function importNote(path) {
-  await noteInput.setInputFiles(path);
-  await page.waitForTimeout(800);
+async function importNotes(paths) {
+  await noteInput.setInputFiles(paths);
+  await page.waitForTimeout(1600);
 }
-await importNote('/tmp/nota-imperio-agosto.pdf');
-await importNote('/tmp/nota-imperio-bh-setembro.pdf');
-await importNote('/tmp/nota-sem-empresa.pdf');
+await importNotes(['/tmp/nota-imperio-agosto.pdf', '/tmp/nota-imperio-bh-setembro.pdf', '/tmp/nota-sem-empresa.pdf']);
 const allText = (await page.locator('body').innerText()).replace(/\u00a0/g, ' ');
 if (!allText.includes('Império dos Balões') || !allText.includes('Império dos Balões BH') || !allText.includes('Não identificado')) throw new Error('As três classificações não apareceram na interface');
 if (!allText.includes('R$ 1.000') || !allText.includes('R$ 2.000') || !allText.includes('R$ 300')) { console.log(allText.slice(-2200)); throw new Error('Totais das notas não apareceram na interface'); }
@@ -31,5 +29,5 @@ await monthSelect.selectOption('7');
 await page.waitForTimeout(250);
 const augustText = (await page.locator('body').innerText()).replace(/\u00a0/g, ' ');
 if (!augustText.includes('2 nota(s) no filtro') || !augustText.includes('R$ 1.000')) throw new Error('Filtro de agosto não isolou as duas notas de agosto');
-console.log(JSON.stringify({ ok: true, imported: 3, classifications: ['imperio', 'imperio-bh', 'unknown'], september: 'R$ 2.000', august: 'R$ 1.000 + R$ 300' }));
+console.log(JSON.stringify({ ok: true, selectedInSingleAction: 3, classifications: ['imperio', 'imperio-bh', 'unknown'], september: 'R$ 2.000', august: 'R$ 1.000 + R$ 300' }));
 await browser.close();
