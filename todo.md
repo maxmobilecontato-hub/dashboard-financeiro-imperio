@@ -85,3 +85,11 @@
 - [x] Adicionar variação absoluta e percentual entre o mês selecionado e o mês anterior
 - [x] Executar teste funcional automatizado de duas importações, histórico com múltiplas bases e alternância pelo seletor; setembro real depende do próximo upload
 - [x] Tornar o comparativo de lucro dinâmico conforme novas bases forem importadas
+
+## Separação por empresa/CNPJ
+
+- [x] Identificar empresa e CNPJ nas notas fiscais importadas — teste UI com CNPJs 12.345.678/0001-90 e 98.765.432/0001-10
+- [x] Separar totais recebidos entre Império dos Balões e Império dos Balões BH
+- [x] Adicionar controle lateral com gráfico comparativo por empresa
+- [x] Respeitar mês/ano selecionados e registrar estado sem CNPJ identificado
+- [x] Testar classificação, cálculos, filtros e responsividade da nova seção — teste UI passou com agosto, setembro e documento sem empresa

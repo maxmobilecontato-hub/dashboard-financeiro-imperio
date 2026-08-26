@@ -3,6 +3,9 @@ import {
   buildMonthlyProfitComparison,
   buildMonthlyRevenueComparison,
   calculateProfit,
+  classifyInvoiceCompany,
+  extractInvoiceCnpj,
+  extractInvoiceDateText,
   extractInvoiceTotalText,
   percentChange,
   getBillStatus,
@@ -65,5 +68,16 @@ describe("finance dashboard rules", () => {
     expect(isValidPdfFile("nota.xlsx")).toBe(false);
     expect(extractInvoiceTotalText("VALOR TOTAL DA NOTA R$ 1.234,56")).toBe(1234.56);
     expect(extractInvoiceTotalText("documento sem valor")).toBe(0);
+  });
+
+  it("separates Império dos Balões BH before the base company name", () => {
+    expect(classifyInvoiceCompany("DESTINATÁRIO: IMPÉRIO DOS BALÕES BH\nCNPJ: 12.345.678/0001-90")).toEqual({ company: "imperio-bh", cnpj: "12.345.678/0001-90" });
+    expect(classifyInvoiceCompany("DESTINATÁRIO: IMPÉRIO DOS BALÕES\nCNPJ: 98.765.432/0001-10")).toEqual({ company: "imperio", cnpj: "98.765.432/0001-10" });
+  });
+
+  it("extracts invoice CNPJ and emission date and keeps unknown documents reviewable", () => {
+    expect(extractInvoiceCnpj("CNPJ: 12.345.678/0001-90")).toBe("12.345.678/0001-90");
+    expect(extractInvoiceDateText("DATA DE EMISSÃO: 08/09/2026")?.toISOString().slice(0, 10)).toBe("2026-09-08");
+    expect(classifyInvoiceCompany("CNPJ: 11.222.333/0001-44")).toEqual({ company: "unknown", cnpj: "11.222.333/0001-44" });
   });
 });

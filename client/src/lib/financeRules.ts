@@ -39,6 +39,41 @@ function parseDateCell(value: unknown) {
 export function extractInvoiceTotalText(text: string) { const matches = Array.from(text.matchAll(/(?:valor\s+total|total\s+da\s+nota|valor\s+dos\s+produtos)[^\d]{0,30}(?:R\$\s*)?([\d.]+,\d{2})/gi)); const values = matches.map((match) => numericCell(match[1])); return values.length ? Math.max(...values) : 0; }
 export function isValidPdfFile(name: string) { return name.toLowerCase().endsWith('.pdf'); }
 
+export type InvoiceCompany = 'imperio' | 'imperio-bh' | 'unknown';
+export type InvoiceCompanyInfo = { company: InvoiceCompany; cnpj: string };
+
+function formatCnpj(value: string) {
+  const digits = value.replace(/\D/g, '').slice(0, 14);
+  if (digits.length !== 14) return '';
+  return digits.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+}
+
+export function extractInvoiceCnpj(text: string) {
+  const match = text.match(/\b\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}\b/);
+  return match ? formatCnpj(match[0]) : '';
+}
+
+export function extractInvoiceDateText(text: string) {
+  const match = text.match(/(?:data\s+(?:de\s+)?emiss[aã]o|emiss[aã]o|data\s+de\s+sa[ií]da)[^\d]{0,24}(\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4})/i);
+  return match ? parseDateCell(match[1]) : null;
+}
+
+export function classifyInvoiceCompany(text: string, fileName = '') {
+  const source = normalizeCell(`${text} ${fileName}`);
+  const cnpjPattern = /\b\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}\b/;
+  const bhIndex = source.indexOf('imperio dos baloes bh');
+  const baseIndex = source.indexOf('imperio dos baloes');
+  if (bhIndex >= 0) {
+    const nearby = source.slice(bhIndex, bhIndex + 260);
+    return { company: 'imperio-bh', cnpj: extractInvoiceCnpj(nearby) || extractInvoiceCnpj(text) };
+  }
+  if (baseIndex >= 0) {
+    const nearby = source.slice(baseIndex, baseIndex + 260);
+    return { company: 'imperio', cnpj: extractInvoiceCnpj(nearby) || extractInvoiceCnpj(text) };
+  }
+  return { company: 'unknown', cnpj: text.match(cnpjPattern) ? extractInvoiceCnpj(text) : '' };
+}
+
 export function findReceivablesAmountColumn(rows: unknown[][]) {
   const headerRow = rows.findIndex((row) => row.some((cell) => normalizeCell(cell) === 'nome'));
   if (headerRow < 0) return -1;
