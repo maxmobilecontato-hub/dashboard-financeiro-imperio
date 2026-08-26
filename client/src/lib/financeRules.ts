@@ -36,6 +36,9 @@ function parseDateCell(value: unknown) {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
+export function extractInvoiceTotalText(text: string) { const matches = Array.from(text.matchAll(/(?:valor\s+total|total\s+da\s+nota|valor\s+dos\s+produtos)[^\d]{0,30}(?:R\$\s*)?([\d.]+,\d{2})/gi)); const values = matches.map((match) => numericCell(match[1])); return values.length ? Math.max(...values) : 0; }
+export function isValidPdfFile(name: string) { return name.toLowerCase().endsWith('.pdf'); }
+
 export function findReceivablesAmountColumn(rows: unknown[][]) {
   const headerRow = rows.findIndex((row) => row.some((cell) => normalizeCell(cell) === 'nome'));
   if (headerRow < 0) return -1;
@@ -61,4 +64,23 @@ export function parseReceivablesRows(rows: unknown[][]): ReceivableRow[] {
   const amountIndex = findReceivablesAmountColumn(rows);
   if (amountIndex < 0) return [];
   return rows.slice(headerRow + 1).map((row) => ({ date: parseDateCell(row[dateIndex]), amount: numericCell(row[amountIndex]), name: String(row[nameIndex] ?? '').trim() })).filter((item) => item.amount > 0 && item.name.length > 0);
+}
+
+export function rankByName(rows: Array<{ name: string; amount: number }>, limit = 5) {
+  const grouped = new Map<string, number>();
+  rows.forEach((row) => { const name = row.name.trim() || "Não identificado"; grouped.set(name, (grouped.get(name) || 0) + row.amount); });
+  return Array.from(grouped.entries()).sort((a, b) => b[1] - a[1]).slice(0, limit).map(([name, value]) => ({ name, value }));
+}
+
+export function percentChange(current: number, previous: number) {
+  if (previous === 0) return current === 0 ? 0 : null;
+  return ((current - previous) / Math.abs(previous)) * 100;
+}
+
+export function buildMonthlyProfitComparison<T extends { key: string; label: string; data: { entries: Array<{ amount: number }>; expenses: Array<{ amount: number }>; bills: Array<{ amount: number }> } }>(bases: T[]) {
+  return bases.slice().sort((a, b) => a.key.localeCompare(b.key)).map((base) => ({ name: base.label, lucro: calculateProfit(base.data.entries, base.data.expenses, base.data.bills) }));
+}
+
+export function buildMonthlyRevenueComparison<T extends { key: string; label: string; data: { entries: Array<{ amount: number }> } }>(bases: T[]) {
+  return bases.slice().sort((a, b) => a.key.localeCompare(b.key)).map((base) => ({ name: base.label, faturamento: base.data.entries.reduce((sum, item) => sum + item.amount, 0) }));
 }

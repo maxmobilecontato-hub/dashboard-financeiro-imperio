@@ -44,3 +44,44 @@
 - [x] Recomparar o total após excluir registros espúrios
 
 - [x] Comparar explicitamente o total do parser com o total revalidado da planilha real sem a linha-resumo
+
+## Expansão do dashboard
+
+- [x] Adicionar seleção de mês e ano para reutilizar o dashboard em diferentes períodos
+- [x] Permitir upload de PDFs financeiros
+- [x] Criar áreas específicas para entradas e saídas
+- [x] Criar etapa de importação de notas fiscais de entrada
+- [x] Extrair e somar automaticamente valores das notas fiscais compatíveis
+- [x] Atualizar métricas e gráficos conforme mês/ano selecionados
+- [x] Registrar histórico das importações XLSX e PDF
+- [x] Testar PDF inválido, PDF sem texto e notas fiscais sem valor identificável
+
+## Rankings comerciais
+
+- [x] Exibir os 5 principais clientes por valor de compras realizadas
+- [x] Exibir os 5 principais fornecedores por valor de compras feitas pela empresa
+- [x] Fazer os rankings respeitarem mês e ano selecionados
+- [x] Validar rankings com dados reais e sem registros vazios
+
+## Bases mensais
+
+- [x] Detectar automaticamente mês e ano da planilha importada
+- [x] Armazenar várias bases mensais no navegador sem sobrescrever os meses anteriores
+- [x] Selecionar um mês e exibir exclusivamente os dados daquela base
+- [x] Comparar faturamento entre meses disponíveis
+- [x] Exibir variação absoluta e percentual entre meses
+- [x] Testar agosto e uma segunda base mensal com o mesmo dashboard
+
+## Comparativo de lucro 2026
+
+- [x] Criar gráfico separado de lucro mensal de agosto a dezembro de 2026
+- [x] Manter o gráfico comparativo independente do filtro da visão principal
+- [x] Atualizar o comparativo conforme novas bases mensais forem importadas
+
+## Fechamento mensal dinâmico
+
+- [x] Validar rankings com a planilha real e cobrir nomes vazios e ordenação dos cinco primeiros
+- [x] Implementar comparação de faturamento baseada em todas as bases mensais disponíveis
+- [x] Adicionar variação absoluta e percentual entre o mês selecionado e o mês anterior
+- [ ] Testar alternância entre agosto e setembro com duas bases mensais reais
+- [x] Tornar o comparativo de lucro dinâmico conforme novas bases forem importadas
