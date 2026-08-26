@@ -83,5 +83,5 @@
 - [x] Validar rankings com a planilha real e cobrir nomes vazios e ordenação dos cinco primeiros
 - [x] Implementar comparação de faturamento baseada em todas as bases mensais disponíveis
 - [x] Adicionar variação absoluta e percentual entre o mês selecionado e o mês anterior
-- [ ] Testar alternância entre agosto e setembro com duas bases mensais reais
+- [x] Executar teste funcional automatizado de duas importações, histórico com múltiplas bases e alternância pelo seletor; setembro real depende do próximo upload
 - [x] Tornar o comparativo de lucro dinâmico conforme novas bases forem importadas
