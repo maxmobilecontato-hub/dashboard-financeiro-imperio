@@ -94,3 +94,25 @@
 - [x] Preservar visual, título, âncoras e demais gráficos após a proteção
 - [x] Simular novo boleto pago no arquivo final e confirmar mudança do top 5
 - [x] Documentar que a fonte do gráfico é dinâmica e recalculada pelo Excel
+
+## Correção do bloco BOLETOS PAGOS no dashboard
+
+- [x] Confirmar a tabela e o gráfico exatos dentro da seção BOLETOS PAGOS
+- [x] Ligar a tabela visível às cinco empresas pagas da aba Boletos a Pagar- AGOSTO
+- [x] Ligar o gráfico dessa seção à tabela visível sem alterar layout ou posição
+- [x] Validar valores, atualização automática e preservação dos demais gráficos
+- [x] Entregar novo arquivo Excel corrigido
+
+## Correção final do bloco visível BOLETOS PAGOS
+
+- [x] Preencher as células visíveis Principais Lançamentos e Valor com referências dinâmicas
+- [x] Fazer o gráfico BOLETOS PAGOS ler diretamente a tabela visível preenchida
+- [x] Atualizar o cache inicial do gráfico sem alterar seu layout
+- [x] Validar o print-equivalente com tabela e gráfico não vazios
+- [x] Entregar a versão final da planilha
+
+## Ajustes finais após conferência do bloco BOLETOS PAGOS
+
+- [x] Alterar a fonte do gráfico para DASHBOARD!M10:M14 e DASHBOARD!N10:N14
+- [x] Testar novo pagamento na versão final e confirmar atualização da tabela visível
+- [x] Validar a conexão direta do gráfico e entregar o arquivo final ao usuário
