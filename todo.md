@@ -1,156 +1,102 @@
+# Project TODO
 
-## Restauração dos gráficos do dashboard
+- [x] Dashboard financeiro responsivo com layout refinado inspirado no painel de referência
+- [x] Upload aceitar somente arquivos `.xlsx`
+- [x] Nova importação substituir integralmente a base atual exibida
+- [x] Ler a aba de fluxo de entrada
+- [x] Ler a aba de fluxo de saída
+- [x] Ler a aba de boletos a pagar
+- [x] Ler a aba de pagamentos a receber
+- [x] Calcular total de entradas, saídas, boletos, recebimentos e saldo
+- [x] Calcular lucro líquido mensal como entradas menos saídas menos boletos a pagar
+- [x] Exibir gráfico de lucro líquido mensal
+- [x] Exibir indicadores e gráfico de boletos vencidos, em dia e pagos
+- [x] Exibir despesas por forma de pagamento
+- [x] Exibir comparação entre entradas e saídas
+- [x] Aplicar regra de comprovante como pagamento
+- [x] Exibir itens vencidos como pendência e itens em dia como acompanhamento
+- [x] Exibir histórico da última importação com nome do arquivo e data
+- [x] Criar estados de carregamento, vazio, erro e arquivo inválido
+- [x] Validar o funcionamento com testes Vitest
+- [x] Validar visualmente desktop e mobile
 
-- [x] Validar a planilha enviada e a leitura das abas usadas pelos gráficos
-- [x] Restaurar a renderização dos gráficos com dados importados
-- [x] Garantir que nova gravação da planilha não remova os gráficos
-- [x] Testar gráficos com base real, estado sem dados e layout da aba DASHBOARD
+## Correções de validação
 
-## Gráficos restaurados na planilha Excel
+- [x] Corrigir o parser da aba de pagamentos a receber para localizar as colunas reais de valor e data mesmo com cabeçalho deslocado
+- [x] Revalidar os totais de recebimentos e o saldo após corrigir o parser
+- [x] Garantir que o Vitest inclua e execute os testes das regras do dashboard
 
-- [x] Inspecionar abas e dados do arquivo Excel enviado
-- [x] Recriar os gráficos diretamente na planilha sem alterar a estrutura principal
-- [x] Validar gráficos, fórmulas, formatação de status e abas existentes
-- [x] Entregar uma nova cópia Excel com os gráficos restaurados
+## Validação com base real
 
-## Aprimoramento visual dos gráficos da planilha
+- [x] Validar o parser de pagamentos a receber com a planilha enviada e confirmar a coluna de valor
+- [x] Conferir explicitamente os totais de recebimentos e saldo calculados com os dados reais
 
-- [x] Escolher gráficos mais úteis para entradas, despesas e composição
-- [x] Aplicar títulos, cores, rótulos e posicionamento aprimorados
-- [x] Validar a leitura visual e a integridade das fórmulas e abas
-- [x] Entregar a nova cópia Excel com os gráficos aprimorados
+## Prova do parser integrado
 
-- [x] Posicionar cada gráfico no seu espaço correto, sem sobrepor tabelas ou informações existentes
+- [x] Executar o parser do app com as linhas reais de pagamentos a receber e registrar coluna, quantidade e valores
+- [x] Corrigir o teste para usar cabeçalho sem `VALOR` e excluir código e datas
+- [x] Comparar o total produzido pelo parser do app com o total da planilha real
 
-## Conexão dos gráficos do arquivo recebido
+## Ajuste final do parser real
 
-- [x] Mapear as fontes atuais dos gráficos e fórmulas da aba DASHBOARD
-- [x] Conectar os resumos aos intervalos das abas operacionais
-- [x] Validar atualização automática após alimentar entradas, saídas e boletos — teste temporário confirmou que as fórmulas permanecem vinculadas após novos valores nas abas
-- [x] Entregar a nova cópia Excel conectada
+- [x] Ignorar linhas-resumo ou fórmulas sem nome válido na aba de pagamentos a receber
+- [x] Registrar explicitamente a coluna de valor e os registros válidos encontrados na planilha real
+- [x] Recomparar o total após excluir registros espúrios
 
-## Conexão seletiva dos gráficos existentes
+- [x] Comparar explicitamente o total do parser com o total revalidado da planilha real sem a linha-resumo
 
-- [x] Identificar os gráficos existentes de boletos pagos e total de entradas no arquivo recebido
-- [x] Conectar somente suas fontes às abas operacionais, sem remover ou recriar gráficos
-- [x] Validar preservação de posições, títulos, cores e quantidade de gráficos
-- [x] Entregar a cópia Excel com os gráficos originais conectados
+## Expansão do dashboard
 
-## Gráfico Boletos Pagos
+- [x] Adicionar seleção de mês e ano para reutilizar o dashboard em diferentes períodos
+- [x] Permitir upload de PDFs financeiros
+- [x] Criar áreas específicas para entradas e saídas
+- [x] Criar etapa de importação de notas fiscais de entrada
+- [x] Extrair e somar automaticamente valores das notas fiscais compatíveis
+- [x] Atualizar métricas e gráficos conforme mês/ano selecionados
+- [x] Registrar histórico das importações XLSX e PDF
+- [x] Testar PDF inválido, PDF sem texto e notas fiscais sem valor identificável
 
-- [x] Inspecionar a aba Boletos a Pagar, o gráfico existente e as colunas de status/valor
-- [x] Conectar o gráfico existente a uma fonte dinâmica de boletos pagos
-- [x] Preservar gráfico, posição, título, cores e formatação
-- [x] Validar atualização automática após novos pagamentos
-- [x] Entregar a cópia Excel conectada
+## Rankings comerciais
 
-## Alteração mínima — Boletos Pagos
+- [x] Exibir os 5 principais clientes por valor de compras realizadas
+- [x] Exibir os 5 principais fornecedores por valor de compras feitas pela empresa
+- [x] Fazer os rankings respeitarem mês e ano selecionados
+- [x] Validar rankings com dados reais e sem registros vazios
 
-- [x] Alterar somente a fonte do gráfico Boletos Pagos
-- [x] Não modificar estrutura, dados, estilos, posições ou outros gráficos
-- [x] Validar que a única diferença é a conexão solicitada
-- [x] Entregar a cópia Excel resultante
+## Bases mensais
 
-## Correção do gráfico BOLETOS PAGOS / PRINCIPAIS LANÇAMENTOS
+- [x] Detectar automaticamente mês e ano da planilha importada
+- [x] Armazenar várias bases mensais no navegador sem sobrescrever os meses anteriores
+- [x] Selecionar um mês e exibir exclusivamente os dados daquela base
+- [x] Comparar faturamento entre meses disponíveis
+- [x] Exibir variação absoluta e percentual entre meses
+- [x] Testar agosto e uma segunda base mensal com o mesmo dashboard
 
-- [x] Identificar o objeto do gráfico mostrado no print e suas séries atuais
-- [x] Ligar somente as séries de nomes e valores aos boletos com status PAGO
-- [x] Preservar título, cores, dimensões, posição, abas e demais informações
-- [x] Validar atualização automática ao marcar novos boletos como PAGO — teste simulado com novo comprovante passou após salvar e reabrir
-- [x] Entregar a cópia Excel corrigida
+## Comparativo de lucro 2026
 
-## Correção de instalação do pacote ReactJS no Windows
+- [x] Criar gráfico separado de lucro mensal de agosto a dezembro de 2026
+- [x] Manter o gráfico comparativo independente do filtro da visão principal
+- [x] Atualizar o comparativo conforme novas bases mensais forem importadas
 
-- [x] Remover ou substituir o plugin incompatível com Vite 7
-- [x] Atualizar package.json e lockfile de forma compatível com npm install
-- [x] Validar TypeScript, testes e build após a correção
-- [x] Entregar novo pacote ReactJS corrigido
+## Fechamento mensal dinâmico
 
-## Compatibilidade Windows — scripts npm e esbuild
+- [x] Validar rankings com a planilha real e cobrir nomes vazios e ordenação dos cinco primeiros
+- [x] Implementar comparação de faturamento baseada em todas as bases mensais disponíveis
+- [x] Adicionar variação absoluta e percentual entre o mês selecionado e o mês anterior
+- [x] Executar teste funcional automatizado de duas importações, histórico com múltiplas bases e alternância pelo seletor; setembro real depende do próximo upload
+- [x] Tornar o comparativo de lucro dinâmico conforme novas bases forem importadas
 
-- [x] Corrigir o script `dev` para definir NODE_ENV de forma multiplataforma
-- [x] Atualizar o guia de instalação sobre autorização dos scripts do esbuild
-- [x] Validar os scripts npm, testes e build após a mudança
-- [x] Gerar e entregar novo ZIP compatível com Windows
+## Separação por empresa/CNPJ
 
-## Nova conexão e fixação dos gráficos — arquivo enviado
+- [x] Identificar empresa e CNPJ nas notas fiscais importadas — teste UI com CNPJs 12.345.678/0001-90 e 98.765.432/0001-10
+- [x] Separar totais recebidos entre Império dos Balões e Império dos Balões BH
+- [x] Adicionar controle lateral com gráfico comparativo por empresa
+- [x] Respeitar mês/ano selecionados e registrar estado sem CNPJ identificado
+- [x] Testar classificação, cálculos, filtros e responsividade da nova seção — teste UI passou com agosto, setembro e documento sem empresa
 
-- [x] Inspecionar a aba Boletos a Pagar e as referências do gráfico Boletos Pagos
-- [x] Conectar o gráfico Boletos Pagos a uma fonte dinâmica da aba operacional
-- [x] Fixar as posições dos gráficos sem alterar dados, estilos ou estrutura
-- [x] Validar atualização automática e preservação dos gráficos
-- [x] Entregar a cópia Excel corrigida
+## Upload múltiplo de notas fiscais
 
-## Ajuste final do ranking de Boletos Pagos por empresa
-
-- [x] Identificar a coluna de empresa e a coluna de status na aba Boletos a Pagar
-- [x] Somar os valores somente dos boletos pagos por empresa e selecionar as cinco maiores
-- [x] Conectar o gráfico existente ao ranking dinâmico sem mudar layout ou posição
-- [x] Validar atualização automática após novos pagamentos e entregar a planilha
-
-## Validação complementar do ranking final
-
-- [x] Adicionar proteção de não mover e não redimensionar aos objetos dos gráficos
-- [x] Preservar visual, título, âncoras e demais gráficos após a proteção
-- [x] Simular novo boleto pago no arquivo final e confirmar mudança do top 5
-- [x] Documentar que a fonte do gráfico é dinâmica e recalculada pelo Excel
-
-## Correção do bloco BOLETOS PAGOS no dashboard
-
-- [x] Confirmar a tabela e o gráfico exatos dentro da seção BOLETOS PAGOS
-- [x] Ligar a tabela visível às cinco empresas pagas da aba Boletos a Pagar- AGOSTO
-- [x] Ligar o gráfico dessa seção à tabela visível sem alterar layout ou posição
-- [x] Validar valores, atualização automática e preservação dos demais gráficos
-- [x] Entregar novo arquivo Excel corrigido
-
-## Correção final do bloco visível BOLETOS PAGOS
-
-- [x] Preencher as células visíveis Principais Lançamentos e Valor com referências dinâmicas
-- [x] Fazer o gráfico BOLETOS PAGOS ler diretamente a tabela visível preenchida
-- [x] Atualizar o cache inicial do gráfico sem alterar seu layout
-- [x] Validar o print-equivalente com tabela e gráfico não vazios
-- [x] Entregar a versão final da planilha
-
-## Ajustes finais após conferência do bloco BOLETOS PAGOS
-
-- [x] Alterar a fonte do gráfico para DASHBOARD!M10:M14 e DASHBOARD!N10:N14
-- [x] Testar novo pagamento na versão final e confirmar atualização da tabela visível
-- [x] Validar a conexão direta do gráfico e entregar o arquivo final ao usuário
-
-## Correção dos nomes no bloco BOLETOS PAGOS
-
-- [x] Identificar por que as fórmulas de M10:M14 aparecem como zero na abertura
-- [x] Ajustar a fonte dos nomes para exibir texto corretamente e manter atualização automática
-- [x] Validar nomes, valores, gráfico e preservação do layout
-- [x] Entregar novo arquivo Excel corrigido
-
-## Ajuste de espaçamento entre gráficos
-
-- [x] Medir os anchors e dimensões atuais dos gráficos do dashboard
-- [x] Afastar horizontalmente os gráficos sem alterar tamanho ou estilo
-- [x] Validar que dados, tabelas, locks e demais gráficos permanecem intactos
-- [x] Entregar a planilha com espaçamento ajustado
-
-## Entrega combinada — nomes e espaçamento dos gráficos
-
-- [x] Corrigir a exibição dos cinco nomes no bloco BOLETOS PAGOS
-- [x] Afastar horizontalmente os gráficos mantendo tamanho e estilo
-- [x] Validar dados, atualização automática, locks e posições
-- [x] Entregar arquivo Excel final ao usuário
-
-## Entrega efetiva da versão combinada
-
-- [x] Enviar o arquivo final com nomes visíveis e espaçamento ajustado
-- [x] Confirmar ao usuário o conteúdo da versão enviada
-
-## Confirmação final de envio
-
-- [x] Anexar a versão final com nomes visíveis e espaçamento ajustado
-- [x] Confirmar na mensagem que esta é a versão final solicitada
-
-## Correção definitiva dos nomes das empresas
-
-- [x] Substituir a fórmula complexa de busca dos nomes por uma fórmula simples compatível
-- [x] Confirmar que M10:M14 exibe texto após recálculo e mantém ligação dinâmica
-- [x] Validar valores, gráfico, espaçamento e demais elementos
-- [x] Entregar nova cópia Excel corrigida
+- [x] Permitir selecionar vários PDFs de notas fiscais em uma única ação
+- [x] Processar todos os PDFs selecionados e atualizar totais, empresas e histórico
+- [x] Exibir feedback de progresso e erros parciais sem interromper os demais arquivos
+- [x] Testar upload múltiplo, classificação, soma automática e responsividade

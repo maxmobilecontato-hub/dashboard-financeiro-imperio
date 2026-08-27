@@ -1,33 +1,210 @@
-import { useAuth } from "@/_core/hooks/useAuth";
+import { useMemo, useState } from "react";
+import * as XLSX from "xlsx";
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  CalendarDays,
+  Check,
+  ChevronDown,
+  CircleAlert,
+  CircleDollarSign,
+  Building2,
+  FileSpreadsheet,
+  FileText,
+  Receipt,
+  Landmark,
+  LayoutDashboard,
+  Loader2,
+  RefreshCw,
+  Upload,
+  Wallet,
+} from "lucide-react";
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { Streamdown } from 'streamdown';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
+import { buildMonthlyProfitComparison, buildMonthlyRevenueComparison, calculateProfit, classifyInvoiceCompany, extractInvoiceCnpj, extractInvoiceDateText, extractInvoiceTotalText, getBillStatus, isValidPdfFile, isValidXlsxFile, parseReceivablesRows, percentChange, rankByName, type InvoiceCompany } from "@/lib/financeRules";
 
-/**
- * All content in this page are only for example, replace with your own feature implementation
- * When building pages, remember your instructions in Frontend Workflow, Frontend Best Practices, Design Guide and Common Pitfalls
- */
+type Bill = { dueDate: Date | null; amount: number; proof: boolean; name: string };
+type Ledger = { date: Date | null; amount: number; name: string; method?: string };
+type DashboardData = { entries: Ledger[]; expenses: Ledger[]; bills: Bill[]; receivables: Ledger[]; fileName: string; importedAt: string };
+type PdfRecord = { name: string; importedAt: string; category: "financeiro" | "nota"; total: number; textAvailable: boolean; company: InvoiceCompany; cnpj: string; invoiceDate: Date | null };
+type BaseRecord = { key: string; label: string; data: DashboardData };
+
+
+const emptyData: DashboardData = { entries: [], expenses: [], bills: [], receivables: [], fileName: "Nenhum arquivo importado", importedAt: "—" };
+const companyLabels: Record<InvoiceCompany, string> = { imperio: "Império dos Balões", "imperio-bh": "Império dos Balões BH", unknown: "Não identificado" };
+const companyColors: Record<InvoiceCompany, string> = { imperio: "#2CB5C8", "imperio-bh": "#8B82FF", unknown: "#F4B183" };
+function restorePdfRecords(value: unknown): PdfRecord[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => {
+    const source = item as Partial<PdfRecord>;
+    const company: InvoiceCompany = (source.company === "imperio" || source.company === "imperio-bh" || source.company === "unknown" ? source.company : classifyInvoiceCompany("", source.name || "").company) as InvoiceCompany;
+    return { name: String(source.name || "Documento PDF"), importedAt: String(source.importedAt || "—"), category: source.category === "nota" ? "nota" : "financeiro", total: Number.isFinite(source.total) ? Number(source.total) : 0, textAvailable: Boolean(source.textAvailable), company, cnpj: String(source.cnpj || ""), invoiceDate: source.invoiceDate ? dateValue(source.invoiceDate) : null };
+  });
+}
+function restoreData(parsed: DashboardData): DashboardData { return { ...parsed, entries: parsed.entries.map((item) => ({ ...item, date: dateValue(item.date) })), expenses: parsed.expenses.map((item) => ({ ...item, date: dateValue(item.date) })), receivables: parsed.receivables.map((item) => ({ ...item, date: dateValue(item.date) })), bills: parsed.bills.map((item) => ({ ...item, dueDate: dateValue(item.dueDate) })) }; }
+const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+const compactMoney = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", notation: "compact", maximumFractionDigits: 1 });
+const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
+function normalized(value: unknown) { return String(value ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
+function numberValue(value: unknown) {
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+  const text = String(value ?? "").replace(/R\$\s?/gi, "").replace(/\./g, "").replace(",", ".").replace(/[^\d.-]/g, "");
+  const parsed = Number(text);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+function dateValue(value: unknown) {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
+  if (typeof value === "number") { const parsed = XLSX.SSF.parse_date_code(value); return parsed ? new Date(parsed.y, parsed.m - 1, parsed.d) : null; }
+  const text = String(value ?? "").trim(); if (!text) return null;
+  const br = text.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})$/); if (br) return new Date(Number(br[3].length === 2 ? `20${br[3]}` : br[3]), Number(br[2]) - 1, Number(br[1]));
+  const parsed = new Date(text); return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+function findHeader(rows: unknown[][], terms: string[]) {
+  return rows.findIndex((row) => terms.every((term) => row.some((cell) => normalized(cell).includes(term))));
+}
+function headerIndex(row: unknown[], terms: string[]) { return row.findIndex((cell) => terms.some((term) => normalized(cell).includes(term))); }
+function parseLedger(rows: unknown[][], terms: string[], amountTerms: string[], methodTerms: string[] = []) {
+  const headerRow = findHeader(rows, terms); if (headerRow < 0) return [];
+  const headers = rows[headerRow]; const dateIndex = headerIndex(headers, ["data"]); const amountIndex = headerIndex(headers, amountTerms); const methodIndex = methodTerms.length ? headerIndex(headers, methodTerms) : -1;
+  if (dateIndex < 0 || amountIndex < 0) return [];
+  return rows.slice(headerRow + 1).map((row) => ({ date: dateValue(row[dateIndex]), amount: numberValue(row[amountIndex]), name: String(row[1] ?? row[2] ?? "Lançamento"), method: methodIndex >= 0 ? String(row[methodIndex] ?? "").trim() : undefined })).filter((item) => item.amount > 0 || item.date);
+}
+function parseBills(rows: unknown[][]) {
+  const headerRow = findHeader(rows, ["data de vencimento", "valor"]); if (headerRow < 0) return [];
+  const headers = rows[headerRow]; const dueIndex = headerIndex(headers, ["data de vencimento", "vencimento"]); const amountIndex = headerIndex(headers, ["valor do boleto", "valor"]); const proofIndex = headerIndex(headers, ["comprovante"]);
+  return rows.slice(headerRow + 1).map((row) => ({ dueDate: dateValue(row[dueIndex]), amount: numberValue(row[amountIndex]), proof: proofIndex >= 0 && String(row[proofIndex] ?? "").trim() !== "" && String(row[proofIndex] ?? "").trim() !== "....", name: String(row[2] ?? row[1] ?? "Boleto") })).filter((item) => item.amount > 0 || item.dueDate);
+}
+function parseReceivables(rows: unknown[][]) {
+  const headerRow = findHeader(rows, ["nome"]); if (headerRow < 0) return [];
+  const headers = rows[headerRow]; const dateIndex = Math.max(0, headerIndex(headers, ["data processamento", "data"])); const nameIndex = Math.max(0, headerIndex(headers, ["nome"]));
+  let amountIndex = headerIndex(headers, ["valor", "valores", "recebimento"]);
+  if (amountIndex < 0) {
+    const candidates = headers.map((_, index) => index).filter((index) => index !== dateIndex);
+    amountIndex = candidates.sort((a, b) => {
+      const score = (column: number) => rows.slice(headerRow + 1, headerRow + 30).filter((row) => numberValue(row[column]) > 0).length;
+      return score(b) - score(a);
+    })[0] ?? -1;
+  }
+  if (amountIndex < 0) return [];
+  return rows.slice(headerRow + 1).map((row) => ({ date: dateValue(row[dateIndex]), amount: numberValue(row[amountIndex]), name: String(row[nameIndex] ?? "Recebimento") })).filter((item) => item.amount > 0 || item.date);
+}
+function findSheet(workbook: XLSX.WorkBook, terms: string[]) { return workbook.SheetNames.find((name) => terms.every((term) => normalized(name).includes(term))); }
+function parseWorkbook(workbook: XLSX.WorkBook, fileName: string): DashboardData {
+  const rowsFor = (terms: string[]) => { const name = findSheet(workbook, terms); return name ? XLSX.utils.sheet_to_json(workbook.Sheets[name], { header: 1, raw: true, defval: "" }) as unknown[][] : []; };
+  const importedAt = new Date().toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+  return { entries: parseLedger(rowsFor(["controle", "fluxo", "entrada"]), ["data", "valor"], ["valor", "valores"]), expenses: parseLedger(rowsFor(["controle", "fluxo", "saida"]), ["data", "valor"], ["valor"], ["forma de pagamento"]), bills: parseBills(rowsFor(["boletos", "pagar"])), receivables: parseReceivablesRows(rowsFor(["pagamentos", "receber"])), fileName, importedAt };
+}
+
+function StatCard({ label, value, icon: Icon, accent, detail }: { label: string; value: string; icon: typeof Wallet; accent: string; detail?: string }) {
+  return <Card className="stat-card"><CardContent className="p-0"><div className={cn("stat-icon", accent)}><Icon size={21} /></div><div className="stat-copy"><p>{label}</p><strong>{value}</strong>{detail && <span>{detail}</span>}</div></CardContent></Card>;
+}
+function chartMoney(value: number) { return compactMoney.format(value).replace(" ", " "); }
+function filterByPeriod<T extends { date: Date | null }>(items: T[], month: string, year: string) { return items.filter((item) => item.date && (year === "all" || String(item.date.getFullYear()) === year) && (month === "all" || String(item.date.getMonth()) === month)); }
+function detectPeriod(fileName: string, data: DashboardData) { const match = fileName.match(/(?:^|[^\d])(\d{1,2})[-_](\d{1,2})[-_](20\d{2})(?:[^\d]|$)/); if (match) { const month = Number(match[2]); const year = Number(match[3]); if (month >= 1 && month <= 12) return { key: `${year}-${String(month).padStart(2, "0")}`, label: `${monthNames[month - 1]} ${year}` }; } const dates = [...data.entries, ...data.expenses, ...data.receivables].map((item) => item.date).filter((date): date is Date => date instanceof Date); const date = dates[0] || data.bills.find((item) => item.dueDate)?.dueDate; return date ? { key: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`, label: `${monthNames[date.getMonth()]} ${date.getFullYear()}` } : { key: "sem-periodo", label: "Sem período" }; }
+async function extractPdfText(file: File) { const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs"); pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/legacy/build/pdf.worker.mjs", import.meta.url).toString(); const pdf = await pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()), useWorkerFetch: false, isEvalSupported: false } as any).promise; let text = ""; for (let page = 1; page <= pdf.numPages; page += 1) { const content = await (await pdf.getPage(page)).getTextContent(); text += content.items.map((item) => ("str" in item ? item.str : "")).join(" ") + " "; } return text.trim(); }
+
 export default function Home() {
-  // The useAuth hook provides authentication state.
-  // To implement login/logout, call logout(), or start login from an event
-  // handler: onClick={() => startLogin()} (imported from "@/const"). Never call
-  // startLogin() during render (no href={startLogin()}) — it mints a one-time
-  // nonce cookie and must run only at the moment of navigation.
-  let { user, loading, error, isAuthenticated, logout } = useAuth();
+  const [data, setData] = useState<DashboardData>(() => { const raw = localStorage.getItem("finance-dashboard-data"); if (!raw) return emptyData; try { return restoreData(JSON.parse(raw) as DashboardData); } catch { return emptyData; } });
+  const [loading, setLoading] = useState(false); const [pdfProgress, setPdfProgress] = useState(""); const [error, setError] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState("all"); const [selectedYear, setSelectedYear] = useState("all");
+  const [pdfRecords, setPdfRecords] = useState<PdfRecord[]>(() => { try { return restorePdfRecords(JSON.parse(localStorage.getItem("finance-dashboard-pdfs") || "[]")); } catch { return []; } });
+  const [baseHistory, setBaseHistory] = useState<BaseRecord[]>(() => { try { const parsed = JSON.parse(localStorage.getItem("finance-dashboard-bases") || "[]") as BaseRecord[]; return parsed.map((item) => ({ ...item, data: restoreData(item.data) })); } catch { return []; } });
+  const [selectedBaseKey, setSelectedBaseKey] = useState("");
 
-  // If theme is switchable in App.tsx, we can implement theme toggling like this:
-  // const { theme, toggleTheme } = useTheme();
-
-  return (
-    <div className="min-h-screen flex flex-col">
-      <main>
-        {/* Example: lucide-react for icons */}
-        <Loader2 className="animate-spin" />
-        Example Page
-        {/* Example: Streamdown for markdown rendering */}
-        <Streamdown>Any **markdown** content</Streamdown>
-        <Button variant="default">Example Button</Button>
-      </main>
-    </div>
-  );
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const periodEntries = useMemo(() => filterByPeriod(data.entries, selectedMonth, selectedYear), [data.entries, selectedMonth, selectedYear]);
+  const periodExpenses = useMemo(() => filterByPeriod(data.expenses, selectedMonth, selectedYear), [data.expenses, selectedMonth, selectedYear]);
+  const periodReceivables = useMemo(() => filterByPeriod(data.receivables, selectedMonth, selectedYear), [data.receivables, selectedMonth, selectedYear]);
+  const periodBills = useMemo(() => data.bills.filter((item) => item.dueDate && (selectedYear === "all" || String(item.dueDate.getFullYear()) === selectedYear) && (selectedMonth === "all" || String(item.dueDate.getMonth()) === selectedMonth)), [data.bills, selectedMonth, selectedYear]);
+  const summary = useMemo(() => {
+    const entries = periodEntries.reduce((sum, item) => sum + item.amount, 0); const expenses = periodExpenses.reduce((sum, item) => sum + item.amount, 0); const bills = periodBills.reduce((sum, item) => sum + item.amount, 0); const receivables = periodReceivables.reduce((sum, item) => sum + item.amount, 0);
+    const paid = periodBills.filter((b) => getBillStatus(b.dueDate, b.proof, today) === "paid"); const overdue = periodBills.filter((b) => getBillStatus(b.dueDate, b.proof, today) === "overdue"); const onTime = periodBills.filter((b) => getBillStatus(b.dueDate, b.proof, today) === "on-time");
+    return { entries, expenses, bills, receivables, paid, overdue, onTime, balance: calculateProfit([{ amount: entries }], [{ amount: expenses }], [{ amount: bills }]) };
+  }, [periodEntries, periodExpenses, periodBills, periodReceivables, today]);
+  const monthly = useMemo(() => monthNames.map((month, index) => { const entries = data.entries.filter((item) => item.date?.getMonth() === index && (selectedYear === "all" || String(item.date.getFullYear()) === selectedYear)); const expenses = data.expenses.filter((item) => item.date?.getMonth() === index && (selectedYear === "all" || String(item.date.getFullYear()) === selectedYear)); const bills = data.bills.filter((item) => item.dueDate?.getMonth() === index && (selectedYear === "all" || String(item.dueDate.getFullYear()) === selectedYear)); return { month, lucro: calculateProfit(entries, expenses, bills) }; }), [data, selectedYear]);
+  const paymentMethods = useMemo(() => { const map = new Map<string, number>(); periodExpenses.forEach((item) => { const key = item.method || "Outros"; map.set(key, (map.get(key) || 0) + item.amount); }); return Array.from(map.entries()).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([name, value]) => ({ name: name.length > 18 ? `${name.slice(0, 18)}…` : name, value })); }, [periodExpenses]);
+  const comparison = [{ name: "Entradas", value: summary.entries }, { name: "Saídas", value: summary.expenses }, { name: "Boletos", value: summary.bills }];
+  const years = useMemo(() => Array.from(new Set([...data.entries, ...data.expenses, ...data.receivables].map((item) => item.date?.getFullYear()).filter(Boolean).map(String))).sort().reverse(), [data]);
+  const orderedBases = useMemo(() => baseHistory.slice().sort((a, b) => a.key.localeCompare(b.key)), [baseHistory]);
+  const comparisonByBase = useMemo(() => buildMonthlyProfitComparison(orderedBases), [orderedBases]);
+  const revenueByBase = useMemo(() => buildMonthlyRevenueComparison(orderedBases), [orderedBases]);
+  const activeBaseIndex = selectedBaseKey ? Math.max(0, orderedBases.findIndex((base) => base.key === selectedBaseKey)) : Math.max(0, orderedBases.length - 1);
+  const activeBase = orderedBases[activeBaseIndex];
+  const previousBase = orderedBases[activeBaseIndex - 1];
+  const activeProfit = activeBase ? calculateProfit(activeBase.data.entries, activeBase.data.expenses, activeBase.data.bills) : summary.balance;
+  const previousProfit = previousBase ? calculateProfit(previousBase.data.entries, previousBase.data.expenses, previousBase.data.bills) : 0;
+  const profitVariation = previousBase ? percentChange(activeProfit, previousProfit) : null;
+  const profitDelta = previousBase ? activeProfit - previousProfit : null;
+  const topEntryRows = useMemo(() => periodEntries.slice().sort((a, b) => b.amount - a.amount).slice(0, 4), [periodEntries]);
+  const topExpenseRows = useMemo(() => periodExpenses.slice().sort((a, b) => b.amount - a.amount).slice(0, 4), [periodExpenses]);
+  const topCustomers = useMemo(() => rankByName(periodEntries, 5), [periodEntries]);
+  const topSuppliers = useMemo(() => rankByName(periodExpenses, 5), [periodExpenses]);
+  const invoiceRecords = useMemo(() => pdfRecords.filter((item) => { if (item.category !== "nota") return false; if (selectedYear === "all" && selectedMonth === "all") return true; if (!item.invoiceDate) return false; return (selectedYear === "all" || item.invoiceDate.getFullYear().toString() === selectedYear) && (selectedMonth === "all" || item.invoiceDate.getMonth().toString() === selectedMonth); }), [pdfRecords, selectedMonth, selectedYear]);
+  const invoiceTotal = invoiceRecords.reduce((sum, item) => sum + item.total, 0);
+  const invoiceCompanyStats = useMemo(() => (["imperio", "imperio-bh", "unknown"] as InvoiceCompany[]).map((company) => ({ company, name: companyLabels[company], value: invoiceRecords.filter((item) => item.company === company).reduce((sum, item) => sum + item.total, 0), count: invoiceRecords.filter((item) => item.company === company).length, cnpj: invoiceRecords.find((item) => item.company === company && item.cnpj)?.cnpj || "CNPJ não localizado" })), [invoiceRecords]);
+  const statusData = [{ name: "Pagos", value: summary.paid.length, color: "#93D44A" }, { name: "Vencidos", value: summary.overdue.length, color: "#EA665A" }, { name: "Em dia", value: summary.onTime.length, color: "#F4B183" }];
+  const statusText = periodBills.length ? `${summary.paid.length} pagos · ${summary.overdue.length} vencidos · ${summary.onTime.length} em dia` : "Importe sua planilha para visualizar";
+  async function handleFile(file?: File) { if (!file) return; setError(""); if (!isValidXlsxFile(file.name)) { setError("Formato inválido. Envie somente um arquivo .xlsx."); return; } setLoading(true); try { const buffer = await file.arrayBuffer(); const workbook = XLSX.read(buffer, { type: "array", cellDates: true }); const next = parseWorkbook(workbook, file.name); const period = detectPeriod(file.name, next); const record = { key: period.key, label: period.label, data: next }; const merged = [record, ...baseHistory.filter((item) => item.key !== record.key)]; setBaseHistory(merged); setSelectedBaseKey(record.key); setData(next); localStorage.setItem("finance-dashboard-data", JSON.stringify(next)); localStorage.setItem("finance-dashboard-bases", JSON.stringify(merged)); } catch { setError("Não foi possível ler este arquivo. Verifique se ele é um Excel .xlsx válido."); } finally { setLoading(false); } }
+  function handleBaseChange(key: string) { setSelectedBaseKey(key); const base = baseHistory.find((item) => item.key === key); if (base) { setData(base.data); localStorage.setItem("finance-dashboard-data", JSON.stringify(base.data)); } }
+  async function handlePdfFiles(fileList: FileList | null, category: PdfRecord["category"]) {
+    const files = fileList ? Array.from(fileList) : [];
+    if (!files.length) return;
+    setError("");
+    setPdfProgress(`Lendo ${files.length} PDF${files.length > 1 ? "s" : ""}…`);
+    setLoading(true);
+    let completed = 0;
+    const results: PromiseSettledResult<PdfRecord>[] = await Promise.allSettled(files.map(async (file) => {
+      try {
+        if (!isValidPdfFile(file.name)) throw new Error(`${file.name}: formato inválido`);
+        const text = await extractPdfText(file);
+        const classification = category === "nota" ? classifyInvoiceCompany(text, file.name) : { company: "unknown" as const, cnpj: "" };
+        return { name: file.name, importedAt: new Date().toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }), category, total: category === "nota" ? extractInvoiceTotalText(text) : 0, textAvailable: text.length > 0, company: classification.company as InvoiceCompany, cnpj: classification.cnpj || extractInvoiceCnpj(text), invoiceDate: category === "nota" ? extractInvoiceDateText(text) : null };
+      } finally {
+        completed += 1;
+        setPdfProgress(`Lidas ${completed}/${files.length} notas…`);
+      }
+    }));
+    const imported: PdfRecord[] = results.flatMap((result) => result.status === "fulfilled" ? [result.value] : []);
+    const failures = results.filter((result) => result.status === "rejected");
+    if (imported.length) {
+      const next = [...imported, ...pdfRecords.filter((old) => !imported.some((item) => item.name === old.name))].slice(0, 20);
+      setPdfRecords(next);
+      localStorage.setItem("finance-dashboard-pdfs", JSON.stringify(next));
+    }
+    if (failures.length) setError(`${imported.length} PDF${imported.length === 1 ? "" : "s"} importado${imported.length === 1 ? "" : "s"}; ${failures.length} arquivo${failures.length === 1 ? "" : "s"} não pôde${failures.length === 1 ? "" : "ram"} ser lido${failures.length === 1 ? "" : "s"}.`);
+    setLoading(false);
+    setPdfProgress("");
+  }
+  return <div className="dashboard-shell">
+    <aside className="sidebar"><div className="brand-mark"><span>MF</span></div><div className="brand-caption">FINANCE<br /><b>CONTROL</b></div><nav><a className="active"><LayoutDashboard size={18} /><span>Visão geral</span></a><a><Wallet size={18} /><span>Fluxo de caixa</span></a><a><Landmark size={18} /><span>Boletos</span></a><a><CircleDollarSign size={18} /><span>Recebimentos</span></a></nav><div className="sidebar-company-control"><div className="sidebar-company-title"><Building2 size={14} /><span>Por empresa</span></div>{invoiceCompanyStats.slice(0, 2).map((item) => <div className="sidebar-company-row" key={item.company}><span className="company-dot" style={{ background: companyColors[item.company] }} /><div><b>{item.name.replace("Império dos Balões ", "Império ")}</b><small>{money.format(item.value)}</small></div></div>)}</div><div className="sidebar-foot"><div className="mini-status"><span className="pulse" /> Sincronização local</div></div></aside>
+    <main className="main-content"><header className="topbar"><div><p className="eyebrow">CENTRAL FINANCEIRA</p><h1>Visão geral</h1><p className="subtitle">Uma leitura clara do seu negócio, em um só lugar.</p></div><div className="top-actions"><div className="period-filters"><label>Base<select value={selectedBaseKey} onChange={(event) => handleBaseChange(event.target.value)}><option value="">Atual</option>{baseHistory.map((base) => <option key={base.key} value={base.key}>{base.label}</option>)}</select></label><label>Mês<select value={selectedMonth} onChange={(event) => setSelectedMonth(event.target.value)}><option value="all">Todos</option>{monthNames.map((month, index) => <option key={month} value={String(index)}>{month}</option>)}</select></label><label>Ano<select value={selectedYear} onChange={(event) => setSelectedYear(event.target.value)}><option value="all">Todos</option>{years.map((year) => <option key={year} value={year}>{year}</option>)}</select></label></div><div className="date-chip"><CalendarDays size={17} /><span>Atualizado em<br /><b>{data.importedAt}</b></span></div><label className="upload-button">{loading ? <Loader2 className="spin" size={18} /> : <Upload size={18} />}<span>{loading ? "Lendo planilha…" : "Importar XLSX"}</span><input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={(event) => handleFile(event.target.files?.[0])} /></label></div></header>
+      {error && <div className="error-banner"><CircleAlert size={18} />{error}</div>}
+      <section className="hero-strip"><div><span className="hero-kicker">LUCRATIVIDADE ACUMULADA</span><strong>{money.format(summary.balance)}</strong><p>Entradas menos saídas e boletos a pagar</p></div><div className="hero-visual"><div className="hero-ring"><span>R$</span></div><div><b>{data.fileName === "Nenhum arquivo importado" ? "Comece pela sua base" : "Base sincronizada"}</b><small>{data.fileName}</small></div></div></section>
+      <section className="import-tools"><div><p className="section-label">CENTRAL DE DOCUMENTOS</p><h2>Atualize sua base por período</h2><span>O XLSX substitui a base do painel. PDFs podem ser conferidos e notas fiscais têm o valor total calculado automaticamente.</span></div><div className="document-actions"><label className="outline-upload"><FileText size={16} /> {pdfProgress || "PDF financeiro"}<input type="file" accept=".pdf,application/pdf" multiple onChange={(event) => handlePdfFiles(event.target.files, "financeiro")} /></label><label className="outline-upload"><Receipt size={16} /> {pdfProgress || "Nota fiscal PDF"}<input type="file" accept=".pdf,application/pdf" multiple onChange={(event) => handlePdfFiles(event.target.files, "nota")} /></label></div></section><section className="stats-grid"><StatCard label="Total de entradas" value={money.format(summary.entries)} icon={ArrowDownRight} accent="accent-cyan" detail={`${periodEntries.length} lançamentos`} /><StatCard label="Total de saídas" value={money.format(summary.expenses)} icon={ArrowUpRight} accent="accent-magenta" detail={`${periodExpenses.length} lançamentos`} /><StatCard label="Boletos a pagar" value={money.format(summary.bills)} icon={FileSpreadsheet} accent="accent-orange" detail={`${periodBills.length} títulos`} /><StatCard label="A receber" value={money.format(summary.receivables)} icon={CircleDollarSign} accent="accent-purple" detail={`${periodReceivables.length} registros`} /></section>
+      <section className="ledger-panels"><Card className="ledger-card"><CardHeader><div><p className="section-label">ENTRADAS</p><CardTitle>Principais entradas</CardTitle></div><ArrowDownRight size={18} className="ledger-icon positive" /></CardHeader><CardContent>{topEntryRows.length ? <div className="ledger-list">{topEntryRows.map((item) => <div className="ledger-row" key={`${item.name}-${item.amount}-${item.date?.toISOString()}`}><div><b>{item.name || "Entrada sem identificação"}</b><span>{item.date ? item.date.toLocaleDateString("pt-BR") : "Sem data"}</span></div><strong>{money.format(item.amount)}</strong></div>)}</div> : <div className="empty-ranking">Nenhuma entrada no período.</div>}</CardContent></Card><Card className="ledger-card"><CardHeader><div><p className="section-label">SAÍDAS</p><CardTitle>Principais saídas</CardTitle></div><ArrowUpRight size={18} className="ledger-icon negative" /></CardHeader><CardContent>{topExpenseRows.length ? <div className="ledger-list">{topExpenseRows.map((item) => <div className="ledger-row" key={`${item.name}-${item.amount}-${item.date?.toISOString()}`}><div><b>{item.name || "Saída sem identificação"}</b><span>{item.date ? item.date.toLocaleDateString("pt-BR") : "Sem data"} · {item.method || "Forma não informada"}</span></div><strong>{money.format(item.amount)}</strong></div>)}</div> : <div className="empty-ranking">Nenhuma saída no período.</div>}</CardContent></Card></section><section className="content-grid"><Card className="chart-card chart-wide"><CardHeader><div><p className="section-label">PERFORMANCE</p><CardTitle>Lucro líquido por mês</CardTitle></div><div className="legend-pill"><span /> Atualização automática</div></CardHeader><CardContent><div className="chart-wrap"><ResponsiveContainer width="100%" height="100%"><AreaChart data={monthly} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}><defs><linearGradient id="profitFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#6C63FF" stopOpacity={0.5} /><stop offset="100%" stopColor="#6C63FF" stopOpacity={0.02} /></linearGradient></defs><CartesianGrid vertical={false} stroke="#293251" strokeDasharray="3 5" /><XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#8C96B5", fontSize: 11 }} /><YAxis axisLine={false} tickLine={false} tick={{ fill: "#8C96B5", fontSize: 11 }} tickFormatter={chartMoney} /><Tooltip contentStyle={{ background: "#1D2541", border: "1px solid #354269", borderRadius: 12, color: "#fff" }} formatter={(value: number) => [money.format(value), "Lucro líquido"]} /><Area type="monotone" dataKey="lucro" stroke="#8B82FF" strokeWidth={3} fill="url(#profitFill)" dot={{ r: 3, fill: "#D9D6FF", stroke: "#6C63FF", strokeWidth: 2 }} /></AreaChart></ResponsiveContainer></div></CardContent></Card>
+        <Card className="chart-card"><CardHeader><div><p className="section-label">ACOMPANHAMENTO</p><CardTitle>Status dos boletos</CardTitle></div></CardHeader><CardContent><div className="donut-layout"><div className="donut-wrap"><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={statusData} dataKey="value" nameKey="name" innerRadius={52} outerRadius={77} paddingAngle={3} stroke="none"><Cell fill="#93D44A" /><Cell fill="#EA665A" /><Cell fill="#F4B183" /></Pie><Tooltip contentStyle={{ background: "#1D2541", border: "1px solid #354269", borderRadius: 12, color: "#fff" }} /></PieChart></ResponsiveContainer><div className="donut-center"><b>{periodBills.length}</b><span>boletos</span></div></div><div className="status-list"><div><i className="dot green" /><span>Pagos</span><b>{summary.paid.length}</b></div><div><i className="dot red" /><span>Vencidos</span><b>{summary.overdue.length}</b></div><div><i className="dot orange" /><span>Em dia</span><b>{summary.onTime.length}</b></div></div></div><p className="chart-footnote">{statusText}</p></CardContent></Card>
+        <Card className="chart-card"><CardHeader><div><p className="section-label">COMPOSIÇÃO</p><CardTitle>Despesas por lançamento</CardTitle></div></CardHeader><CardContent><div className="chart-wrap short"><ResponsiveContainer width="100%" height="100%"><BarChart data={paymentMethods} layout="vertical" margin={{ top: 0, right: 12, left: 8, bottom: 0 }}><CartesianGrid horizontal={false} stroke="#293251" /><XAxis type="number" hide /><YAxis type="category" dataKey="name" width={100} axisLine={false} tickLine={false} tick={{ fill: "#AAB3CA", fontSize: 10 }} /><Tooltip contentStyle={{ background: "#1D2541", border: "1px solid #354269", borderRadius: 12, color: "#fff" }} formatter={(value: number) => [money.format(value), "Valor"]} /><Bar dataKey="value" fill="#B04B9B" radius={[0, 5, 5, 0]} barSize={15} /></BarChart></ResponsiveContainer></div></CardContent></Card>
+        <Card className="chart-card"><CardHeader><div><p className="section-label">MOVIMENTO</p><CardTitle>Entradas x compromissos</CardTitle></div></CardHeader><CardContent><div className="chart-wrap short"><ResponsiveContainer width="100%" height="100%"><BarChart data={comparison} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}><CartesianGrid vertical={false} stroke="#293251" strokeDasharray="3 5" /><XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "#AAB3CA", fontSize: 10 }} /><YAxis axisLine={false} tickLine={false} tick={{ fill: "#8C96B5", fontSize: 10 }} tickFormatter={chartMoney} /><Tooltip contentStyle={{ background: "#1D2541", border: "1px solid #354269", borderRadius: 12, color: "#fff" }} formatter={(value: number) => [money.format(value), "Valor"]} /><Bar dataKey="value" radius={[6, 6, 0, 0]}><Cell fill="#2CB5C8" /><Cell fill="#C64D9B" /><Cell fill="#F4B183" /></Bar></BarChart></ResponsiveContainer></div></CardContent></Card></section>
+      <section className="bottom-grid"><Card className="import-card"><CardHeader><div><p className="section-label">ÚLTIMA IMPORTAÇÃO</p><CardTitle>Histórico da base</CardTitle></div><RefreshCw size={18} className="muted-icon" /></CardHeader><CardContent><div className="import-row"><div className="file-icon"><FileSpreadsheet size={22} /></div><div className="import-meta"><b>{data.fileName}</b><span>{data.importedAt} · Base atual substituída</span></div><div className="import-check"><Check size={16} /></div></div><Progress value={data.fileName === "Nenhum arquivo importado" ? 0 : 100} className="progress-track" /></CardContent></Card><Card className="attention-card"><CardHeader><div><p className="section-label">PONTOS DE ATENÇÃO</p><CardTitle>Prioridades financeiras</CardTitle></div><ChevronDown size={18} className="muted-icon" /></CardHeader><CardContent><div className="attention-line"><span className="priority red" /><div><b>{summary.overdue.length ? `${summary.overdue.length} boleto(s) vencido(s)` : "Nenhum boleto vencido"}</b><small>{summary.overdue.length ? "Revisar pagamentos pendentes" : "Sua agenda está em dia"}</small></div><CircleAlert size={18} className="attention-icon" /></div><div className="attention-line"><span className="priority orange" /><div><b>{summary.onTime.length ? `${summary.onTime.length} boleto(s) em acompanhamento` : "Sem boletos em acompanhamento"}</b><small>Próximos vencimentos da base</small></div><CalendarDays size={18} className="attention-icon" /></div></CardContent></Card></section>
+      <section className="monthly-compare"><Card className="chart-card"><CardHeader><div><p className="section-label">COMPARATIVO 2026</p><CardTitle>Lucro líquido por mês</CardTitle></div><span className="ranking-period">Ago — Dez/26</span></CardHeader><CardContent>{comparisonByBase.length ? <div className="chart-wrap short"><ResponsiveContainer width="100%" height="100%"><BarChart data={comparisonByBase} margin={{ top: 8, right: 12, left: -12, bottom: 0 }}><CartesianGrid vertical={false} stroke="#293251" strokeDasharray="3 5" /><XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "#AAB3CA", fontSize: 10 }} /><YAxis axisLine={false} tickLine={false} tick={{ fill: "#8C96B5", fontSize: 10 }} tickFormatter={chartMoney} /><Tooltip contentStyle={{ background: "#1D2541", border: "1px solid #354269", borderRadius: 12, color: "#fff" }} formatter={(value: number) => [money.format(value), "Lucro líquido"]} /><Bar dataKey="lucro" fill="#6C63FF" radius={[6, 6, 0, 0]} /></BarChart></ResponsiveContainer></div> : <div className="empty-ranking">Importe uma planilha mensal para iniciar a comparação.</div>}</CardContent></Card><Card className="chart-card"><CardHeader><div><p className="section-label">FATURAMENTO</p><CardTitle>Entradas por mês</CardTitle></div><span className={cn("variation-pill", profitVariation !== null && profitVariation >= 0 ? "up" : "down")}>{profitVariation === null || profitDelta === null ? "Sem comparação" : `${money.format(profitDelta)} · ${profitVariation >= 0 ? "+" : ""}${profitVariation.toFixed(1)}% vs. anterior`}</span></CardHeader><CardContent>{revenueByBase.length ? <div className="chart-wrap short"><ResponsiveContainer width="100%" height="100%"><BarChart data={revenueByBase} margin={{ top: 8, right: 12, left: -12, bottom: 0 }}><CartesianGrid vertical={false} stroke="#293251" strokeDasharray="3 5" /><XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "#AAB3CA", fontSize: 10 }} /><YAxis axisLine={false} tickLine={false} tick={{ fill: "#8C96B5", fontSize: 10 }} tickFormatter={chartMoney} /><Tooltip contentStyle={{ background: "#1D2541", border: "1px solid #354269", borderRadius: 12, color: "#fff" }} formatter={(value: number) => [money.format(value), "Faturamento"]} /><Bar dataKey="faturamento" fill="#2CB5C8" radius={[6, 6, 0, 0]} /></BarChart></ResponsiveContainer></div> : <div className="empty-ranking">Importe bases mensais para iniciar a comparação.</div>}</CardContent></Card></section><section className="ranking-grid"><Card className="ranking-card"><CardHeader><div><p className="section-label">CLIENTES</p><CardTitle>5 principais clientes</CardTitle></div><span className="ranking-period">{selectedMonth === "all" ? "Todos os meses" : monthNames[Number(selectedMonth)]}</span></CardHeader><CardContent>{topCustomers.length ? <div className="ranking-list">{topCustomers.map((item, index) => <div className="ranking-item" key={item.name}><span className="rank-number">0{index + 1}</span><div className="rank-name"><b>{item.name}</b><Progress value={Math.min(100, summary.entries ? item.value / summary.entries * 100 : 0)} /></div><strong>{money.format(item.value)}</strong></div>)}</div> : <div className="empty-ranking">Importe sua planilha para ativar o ranking de clientes.</div>}</CardContent></Card><Card className="ranking-card"><CardHeader><div><p className="section-label">FORNECEDORES</p><CardTitle>5 maiores compras</CardTitle></div><span className="ranking-period">{selectedMonth === "all" ? "Todos os meses" : monthNames[Number(selectedMonth)]}</span></CardHeader><CardContent>{topSuppliers.length ? <div className="ranking-list">{topSuppliers.map((item, index) => <div className="ranking-item" key={item.name}><span className="rank-number">0{index + 1}</span><div className="rank-name"><b>{item.name}</b><Progress value={Math.min(100, summary.expenses ? item.value / summary.expenses * 100 : 0)} /></div><strong>{money.format(item.value)}</strong></div>)}</div> : <div className="empty-ranking">Importe sua planilha para ativar o ranking de fornecedores.</div>}</CardContent></Card></section><section className="company-section"><Card className="company-card"><CardHeader><div><p className="section-label">CONTROLE POR CNPJ</p><CardTitle>Recebimentos por empresa</CardTitle></div><span className="ranking-period">{invoiceRecords.length ? `${invoiceRecords.length} nota(s) no filtro` : "Aguardando notas"}</span></CardHeader><CardContent><div className="company-layout"><div className="company-chart"><ResponsiveContainer width="100%" height="100%"><BarChart data={invoiceCompanyStats} layout="vertical" margin={{ top: 4, right: 16, left: 12, bottom: 4 }}><CartesianGrid horizontal={false} stroke="#293251" /><XAxis type="number" hide /><YAxis type="category" dataKey="name" width={142} axisLine={false} tickLine={false} tick={{ fill: "#AAB3CA", fontSize: 10 }} /><Tooltip contentStyle={{ background: "#1D2541", border: "1px solid #354269", borderRadius: 12, color: "#fff" }} formatter={(value: number) => [money.format(value), "Recebido"]} /><Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={18}>{invoiceCompanyStats.map((item) => <Cell key={item.company} fill={companyColors[item.company]} />)}</Bar></BarChart></ResponsiveContainer></div><div className="company-list">{invoiceCompanyStats.map((item) => <div className="company-row" key={item.company}><div className="company-row-heading"><span className="company-dot" style={{ background: companyColors[item.company] }} /><b>{item.name}</b><strong>{money.format(item.value)}</strong></div><span>{item.count} nota(s) · {item.cnpj}</span>{item.company === "unknown" && item.count > 0 && <small>Confira o nome/CNPJ no PDF para classificar esta nota.</small>}</div>)}</div></div><p className="chart-footnote">A classificação prioriza o nome da empresa no texto do PDF e registra o primeiro CNPJ localizado. PDFs sem texto ou sem correspondência ficam em “Não identificado”.</p></CardContent></Card></section><section className="pdf-history"><Card className="import-card"><CardHeader><div><p className="section-label">DOCUMENTOS PDF</p><CardTitle>Notas e documentos importados</CardTitle></div><span className="pdf-total">Notas fiscais: {money.format(invoiceTotal)}</span></CardHeader><CardContent>{pdfRecords.length ? <div className="pdf-list">{pdfRecords.slice(0, 5).map((item) => <div className="pdf-row" key={`${item.category}-${item.name}`}><FileText size={17} /><div><b>{item.name}</b><span>{item.category === "nota" ? `Nota fiscal · ${item.total ? money.format(item.total) : "valor não identificado"} · ${companyLabels[item.company]}${item.cnpj ? ` · ${item.cnpj}` : ""}` : "Documento financeiro"} · {item.importedAt}</span></div><span className={cn("pdf-badge", item.textAvailable ? "ok" : "warn")}>{item.textAvailable ? "Lido" : "OCR"}</span></div>)}</div> : <div className="empty-ranking">Nenhum PDF importado ainda.</div>}</CardContent></Card></section>
+    </main>
+  </div>;
 }

@@ -1,0 +1,28 @@
+import { chromium } from 'playwright';
+import fs from 'node:fs';
+
+const url = process.env.DASHBOARD_URL || 'http://127.0.0.1:3000';
+const august = '/home/ubuntu/upload/4-MICHAEL-DSHBOARDFINANCEIRO-25-08-2026_status_cores_funcionais.xlsx';
+const september = '/tmp/dashboard-september-derived.xlsx';
+fs.copyFileSync(august, september);
+const browser = await chromium.launch({ headless: true });
+const page = await browser.newPage();
+await page.goto(url, { waitUntil: 'networkidle' });
+const inputs = page.locator('input[type=file]');
+const count = await inputs.count();
+if (count < 1) throw new Error('Nenhum input de arquivo encontrado');
+await inputs.nth(0).setInputFiles(august);
+await page.waitForTimeout(500);
+const firstBase = await page.locator('body').innerText();
+if (!firstBase.includes('25-08-2026') && !firstBase.includes('agosto') && !firstBase.includes('Ago')) throw new Error('A primeira base não apareceu no dashboard');
+await inputs.nth(0).setInputFiles(september);
+await page.waitForTimeout(500);
+const secondBase = await page.locator('body').innerText();
+const selectors = await page.locator('select').count();
+if (selectors < 1) throw new Error('Seletor de base não encontrado');
+const options = await page.locator('select').nth(0).locator('option').allTextContents();
+if (options.length < 2) throw new Error(`Histórico não acumulou duas bases: ${options.join(' | ')}`);
+await page.locator('select').nth(0).selectOption({ index: 0 });
+const afterSwitch = await page.locator('body').innerText();
+console.log(JSON.stringify({ ok: true, fileInputs: count, baseOptions: options, firstHasData: firstBase.includes('R$'), secondHasData: secondBase.includes('R$'), switched: afterSwitch.length > 0 }));
+await browser.close();
