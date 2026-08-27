@@ -113,3 +113,16 @@
 
 - [x] Gerar ZIP com package.json, package-lock.json e configuração Vite sem jsx-loc
 - [x] Enviar o pacote corrigido e confirmar instalação npm sem ERESOLVE
+
+## Publicação do importador estático via GitHub Actions
+
+- [x] Revisar build e configuração de base path para GitHub Pages
+- [x] Preparar workflow de instalação, testes e build
+- [x] Adicionar publicação automática do frontend estático no GitHub Pages
+- [x] Validar build e documentar a ativação do Pages
+
+## Documentação de ativação do GitHub Pages
+
+- [x] Documentar Settings > Pages > Source = GitHub Actions
+- [x] Documentar branch main, disparo manual e URL esperada
+- [x] Confirmar no guia que o importador funciona no navegador sem backend
