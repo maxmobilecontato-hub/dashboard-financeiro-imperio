@@ -116,3 +116,34 @@
 - [x] Alterar a fonte do gráfico para DASHBOARD!M10:M14 e DASHBOARD!N10:N14
 - [x] Testar novo pagamento na versão final e confirmar atualização da tabela visível
 - [x] Validar a conexão direta do gráfico e entregar o arquivo final ao usuário
+
+## Correção dos nomes no bloco BOLETOS PAGOS
+
+- [x] Identificar por que as fórmulas de M10:M14 aparecem como zero na abertura
+- [x] Ajustar a fonte dos nomes para exibir texto corretamente e manter atualização automática
+- [x] Validar nomes, valores, gráfico e preservação do layout
+- [x] Entregar novo arquivo Excel corrigido
+
+## Ajuste de espaçamento entre gráficos
+
+- [x] Medir os anchors e dimensões atuais dos gráficos do dashboard
+- [x] Afastar horizontalmente os gráficos sem alterar tamanho ou estilo
+- [x] Validar que dados, tabelas, locks e demais gráficos permanecem intactos
+- [x] Entregar a planilha com espaçamento ajustado
+
+## Entrega combinada — nomes e espaçamento dos gráficos
+
+- [x] Corrigir a exibição dos cinco nomes no bloco BOLETOS PAGOS
+- [x] Afastar horizontalmente os gráficos mantendo tamanho e estilo
+- [x] Validar dados, atualização automática, locks e posições
+- [x] Entregar arquivo Excel final ao usuário
+
+## Entrega efetiva da versão combinada
+
+- [x] Enviar o arquivo final com nomes visíveis e espaçamento ajustado
+- [x] Confirmar ao usuário o conteúdo da versão enviada
+
+## Confirmação final de envio
+
+- [x] Anexar a versão final com nomes visíveis e espaçamento ajustado
+- [x] Confirmar na mensagem que esta é a versão final solicitada
