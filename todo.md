@@ -72,3 +72,25 @@
 - [x] Atualizar o guia de instalação sobre autorização dos scripts do esbuild
 - [x] Validar os scripts npm, testes e build após a mudança
 - [x] Gerar e entregar novo ZIP compatível com Windows
+
+## Nova conexão e fixação dos gráficos — arquivo enviado
+
+- [x] Inspecionar a aba Boletos a Pagar e as referências do gráfico Boletos Pagos
+- [x] Conectar o gráfico Boletos Pagos a uma fonte dinâmica da aba operacional
+- [x] Fixar as posições dos gráficos sem alterar dados, estilos ou estrutura
+- [x] Validar atualização automática e preservação dos gráficos
+- [x] Entregar a cópia Excel corrigida
+
+## Ajuste final do ranking de Boletos Pagos por empresa
+
+- [x] Identificar a coluna de empresa e a coluna de status na aba Boletos a Pagar
+- [x] Somar os valores somente dos boletos pagos por empresa e selecionar as cinco maiores
+- [x] Conectar o gráfico existente ao ranking dinâmico sem mudar layout ou posição
+- [x] Validar atualização automática após novos pagamentos e entregar a planilha
+
+## Validação complementar do ranking final
+
+- [x] Adicionar proteção de não mover e não redimensionar aos objetos dos gráficos
+- [x] Preservar visual, título, âncoras e demais gráficos após a proteção
+- [x] Simular novo boleto pago no arquivo final e confirmar mudança do top 5
+- [x] Documentar que a fonte do gráfico é dinâmica e recalculada pelo Excel
