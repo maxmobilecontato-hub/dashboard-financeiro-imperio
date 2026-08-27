@@ -100,3 +100,16 @@
 - [x] Processar todos os PDFs selecionados e atualizar totais, empresas e histórico
 - [x] Exibir feedback de progresso e erros parciais sem interromper os demais arquivos
 - [x] Testar upload múltiplo, classificação, soma automática e responsividade
+
+## Correção do conflito npm após rollback
+
+- [x] Remover novamente @builder.io/vite-plugin-jsx-loc da versão revertida
+- [x] Remover sua configuração do vite.config.ts sem alterar o dashboard
+- [x] Regenerar package-lock e validar npm install sem ERESOLVE
+- [x] Validar TypeScript, testes e build
+- [x] Entregar novo pacote ReactJS compatível com npm
+
+## Pacote npm corrigido após rollback
+
+- [x] Gerar ZIP com package.json, package-lock.json e configuração Vite sem jsx-loc
+- [x] Enviar o pacote corrigido e confirmar instalação npm sem ERESOLVE
