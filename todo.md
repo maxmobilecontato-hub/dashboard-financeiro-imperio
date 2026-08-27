@@ -38,18 +38,18 @@
 
 ## Gráfico Boletos Pagos
 
-- [ ] Inspecionar a aba Boletos a Pagar, o gráfico existente e as colunas de status/valor
-- [ ] Conectar o gráfico existente a uma fonte dinâmica de boletos pagos
-- [ ] Preservar gráfico, posição, título, cores e formatação
-- [ ] Validar atualização automática após novos pagamentos
-- [ ] Entregar a cópia Excel conectada
+- [x] Inspecionar a aba Boletos a Pagar, o gráfico existente e as colunas de status/valor
+- [x] Conectar o gráfico existente a uma fonte dinâmica de boletos pagos
+- [x] Preservar gráfico, posição, título, cores e formatação
+- [x] Validar atualização automática após novos pagamentos
+- [x] Entregar a cópia Excel conectada
 
 ## Alteração mínima — Boletos Pagos
 
-- [ ] Alterar somente a fonte do gráfico Boletos Pagos
-- [ ] Não modificar estrutura, dados, estilos, posições ou outros gráficos
-- [ ] Validar que a única diferença é a conexão solicitada
-- [ ] Entregar a cópia Excel resultante
+- [x] Alterar somente a fonte do gráfico Boletos Pagos
+- [x] Não modificar estrutura, dados, estilos, posições ou outros gráficos
+- [x] Validar que a única diferença é a conexão solicitada
+- [x] Entregar a cópia Excel resultante
 
 ## Correção do gráfico BOLETOS PAGOS / PRINCIPAIS LANÇAMENTOS
 
