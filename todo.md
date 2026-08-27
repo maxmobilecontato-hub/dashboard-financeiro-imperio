@@ -147,3 +147,10 @@
 
 - [x] Anexar a versão final com nomes visíveis e espaçamento ajustado
 - [x] Confirmar na mensagem que esta é a versão final solicitada
+
+## Correção definitiva dos nomes das empresas
+
+- [x] Substituir a fórmula complexa de busca dos nomes por uma fórmula simples compatível
+- [x] Confirmar que M10:M14 exibe texto após recálculo e mantém ligação dinâmica
+- [x] Validar valores, gráfico, espaçamento e demais elementos
+- [x] Entregar nova cópia Excel corrigida
