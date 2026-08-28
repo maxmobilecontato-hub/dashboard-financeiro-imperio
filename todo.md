@@ -126,3 +126,9 @@
 - [x] Documentar Settings > Pages > Source = GitHub Actions
 - [x] Documentar branch main, disparo manual e URL esperada
 - [x] Confirmar no guia que o importador funciona no navegador sem backend
+
+## Estrutura .github/workflows
+
+- [x] Confirmar o arquivo de workflow dentro de `.github/workflows`
+- [x] Validar o workflow de build e publicação do importador
+- [x] Entregar a estrutura pronta para o GitHub Actions
