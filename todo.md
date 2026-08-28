@@ -132,3 +132,22 @@
 - [x] Confirmar o arquivo de workflow dentro de `.github/workflows`
 - [x] Validar o workflow de build e publicação do importador
 - [x] Entregar a estrutura pronta para o GitHub Actions
+
+## Correções do GitHub Pages — recursos e console
+
+- [x] Identificar a requisição que retorna 400 no build estático
+- [x] Evitar chamadas/recursos do Manus que não funcionam no GitHub Pages
+- [x] Adicionar favicon disponível no subcaminho do GitHub Pages
+- [x] Validar recursos, build e console após a correção
+
+## Correção da rota inicial no GitHub Pages
+
+- [x] Configurar o roteador para reconhecer o subcaminho do repositório
+- [x] Validar a rota inicial e os assets no build estático
+- [ ] Confirmar a publicação sem 404 no GitHub Pages
+
+## Validação runtime da rota no GitHub Pages
+
+- [ ] Publicar novamente a versão com WouterRouter usando o base path
+- [ ] Confirmar no navegador que a URL inicial não retorna 404
+- [ ] Confirmar em execução que favicon e assets carregam no subcaminho
