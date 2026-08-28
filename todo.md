@@ -144,10 +144,10 @@
 
 - [x] Configurar o roteador para reconhecer o subcaminho do repositório
 - [x] Validar a rota inicial e os assets no build estático
-- [ ] Confirmar a publicação sem 404 no GitHub Pages
+- [x] Confirmar a publicação sem 404 no GitHub Pages
 
 ## Validação runtime da rota no GitHub Pages
 
-- [ ] Publicar novamente a versão com WouterRouter usando o base path
-- [ ] Confirmar no navegador que a URL inicial não retorna 404
-- [ ] Confirmar em execução que favicon e assets carregam no subcaminho
+- [x] Publicar novamente a versão com WouterRouter usando o base path
+- [x] Confirmar no navegador que a URL inicial não retorna 404
+- [x] Confirmar em execução que favicon e assets carregam no subcaminho
