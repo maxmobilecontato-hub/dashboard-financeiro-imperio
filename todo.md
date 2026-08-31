@@ -180,3 +180,4 @@
 - [x] Testar a nova versão por validação estrutural e abertura em leitores diferentes antes da entrega.
 - [x] Fazer a coluna I indicar VENCIDO automaticamente quando a linha B:H estiver vermelha por vencimento, mantendo EM DIA/PAGO e preservando a validação de dados.
 - [x] Replicar o resumo visual de compras realizadas nas próximas três categorias do Dashboard, exibindo contagens dinâmicas conforme a planilha importada e preservando layout/estrutura.
+- [x] Na aba DASHBOARD do arquivo Excel, replicar o padrão de Fluxo de entrada nas demais categorias com número de lançamentos atualizado automaticamente, sem alterar layout/estrutura.
