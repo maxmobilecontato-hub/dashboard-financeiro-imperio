@@ -170,4 +170,9 @@
 - [x] Aplicar regra automática de vencimento equivalente ao padrão da linha 33 na aba BOLETOS A PAGAR- AGOSTO, com bolinha e linha vermelhas quando F chegar ou passar de TODAY(), preservando as demais áreas.
 - [x] Ajustar o vencimento automático da linha: quando F chegar ou passar de TODAY(), A fica com bolinha vermelha e B:H ficam vermelhas, preservando o comprovante como prioridade.
 - [x] Garantir que todas as ocorrências de bolinha vermelha acionem automaticamente a faixa vermelha da linha correspondente na aba BOLETOS A PAGAR- AGOSTO.
+- [x] Corrigir a abrangência real para sincronizar B:H linha a linha sempre que A estiver vermelha até a linha 150, incluindo linhas que falharam na versão anterior.
+- [x] Validar cenários pagos, em dia, vencidos e linhas sem dados após a correção de abrangência.
+- [ ] Solicitar e registrar a confirmação visual no Microsoft Excel da versão final corrigida; o ambiente não possui Excel para executar essa etapa.
+- [x] Na planilha já enviada, sincronizar todas as linhas B:H com a bolinha vermelha de A na aba BOLETOS A PAGAR- AGOSTO.
+- [x] Fazer a coluna I indicar EM DIA automaticamente quando a bolinha da coluna A estiver verde, preservando a validação de dados.
 - [x] Testar a nova versão por validação estrutural e abertura em leitores diferentes antes da entrega.
