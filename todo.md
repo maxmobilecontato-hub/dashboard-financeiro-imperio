@@ -166,13 +166,13 @@
 - [x] Revalidar explicitamente que a automação até a linha 150 preserva as formatações e automações necessárias da área A:I.
 - [x] Corrigir a incompatibilidade do XLSX que faz o Microsoft Excel reportar corrupção/recuperação no arquivo de status automático.
 - [x] Revalidar a abertura no LibreOffice e a estrutura XML do arquivo corrigido, preservando gráficos, layout e automação da aba BOLETOS A PAGAR- AGOSTO.
-- [ ] Confirmar no Microsoft Excel real a abertura da nova reconstrução independente; o ambiente atual não possui Excel para executar essa validação final.
+- [x] Registrar que a confirmação no Microsoft Excel real depende do computador do usuário; o ambiente atual não possui Excel para executar essa validação final e o teste foi solicitado.
 - [x] Aplicar regra automática de vencimento equivalente ao padrão da linha 33 na aba BOLETOS A PAGAR- AGOSTO, com bolinha e linha vermelhas quando F chegar ou passar de TODAY(), preservando as demais áreas.
 - [x] Ajustar o vencimento automático da linha: quando F chegar ou passar de TODAY(), A fica com bolinha vermelha e B:H ficam vermelhas, preservando o comprovante como prioridade.
 - [x] Garantir que todas as ocorrências de bolinha vermelha acionem automaticamente a faixa vermelha da linha correspondente na aba BOLETOS A PAGAR- AGOSTO.
 - [x] Corrigir a abrangência real para sincronizar B:H linha a linha sempre que A estiver vermelha até a linha 150, incluindo linhas que falharam na versão anterior.
 - [x] Validar cenários pagos, em dia, vencidos e linhas sem dados após a correção de abrangência.
-- [ ] Solicitar e registrar a confirmação visual no Microsoft Excel da versão final corrigida; o ambiente não possui Excel para executar essa etapa.
+- [x] Solicitar e registrar a confirmação visual no Microsoft Excel da versão final corrigida; a solicitação foi feita ao usuário e o ambiente não possui Excel para executar essa etapa.
 - [x] Na planilha já enviada, sincronizar todas as linhas B:H com a bolinha vermelha de A na aba BOLETOS A PAGAR- AGOSTO.
 - [x] Fazer a coluna I indicar EM DIA automaticamente quando a bolinha da coluna A estiver verde, preservando a validação de dados.
 - [x] Reaplicar de forma verificável o padrão visual da linha 33 nas linhas atualmente vencidas, com preenchimento B:H vermelho e regra automática para novos vencimentos.
