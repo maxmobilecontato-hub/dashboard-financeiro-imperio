@@ -166,3 +166,5 @@
 - [x] Revalidar explicitamente que a automação até a linha 150 preserva as formatações e automações necessárias da área A:I.
 - [x] Corrigir a incompatibilidade do XLSX que faz o Microsoft Excel reportar corrupção/recuperação no arquivo de status automático.
 - [x] Revalidar a abertura no LibreOffice e a estrutura XML do arquivo corrigido, preservando gráficos, layout e automação da aba BOLETOS A PAGAR- AGOSTO.
+- [ ] Confirmar no Microsoft Excel real a abertura da nova reconstrução independente; o ambiente atual não possui Excel para executar essa validação final.
+- [x] Testar a nova versão por validação estrutural e abertura em leitores diferentes antes da entrega.
