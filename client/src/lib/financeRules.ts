@@ -4,6 +4,11 @@ export function isValidXlsxFile(fileName: string) {
   return fileName.toLowerCase().endsWith('.xlsx');
 }
 
+export function formatLaunchCount(count: number) {
+  const safeCount = Number.isFinite(count) && count >= 0 ? Math.floor(count) : 0;
+  return `${safeCount} lançamentos`;
+}
+
 export function calculateProfit(entries: FinancialItem[], expenses: FinancialItem[], bills: FinancialItem[]) {
   const total = (items: FinancialItem[]) => items.reduce((sum, item) => sum + (Number.isFinite(item.amount) ? item.amount : 0), 0);
   return total(entries) - total(expenses) - total(bills);

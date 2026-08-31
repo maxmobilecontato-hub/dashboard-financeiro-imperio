@@ -7,6 +7,7 @@ import {
   extractInvoiceCnpj,
   extractInvoiceDateText,
   extractInvoiceTotalText,
+  formatLaunchCount,
   percentChange,
   getBillStatus,
   isValidPdfFile,
@@ -16,6 +17,14 @@ import {
 } from "./financeRules";
 
 describe("finance dashboard rules", () => {
+  it("formats the same launches label for every dashboard category", () => {
+    expect(formatLaunchCount(12)).toBe("12 lançamentos");
+    expect(formatLaunchCount(0)).toBe("0 lançamentos");
+    expect(formatLaunchCount(-4)).toBe("0 lançamentos");
+    expect(formatLaunchCount(3.8)).toBe("3 lançamentos");
+    expect(formatLaunchCount(Number.NaN)).toBe("0 lançamentos");
+  });
+
   it("calculates profit as entries minus expenses minus bills", () => {
     expect(calculateProfit([{ amount: 1000 }], [{ amount: 250 }], [{ amount: 150 }])).toBe(600);
   });

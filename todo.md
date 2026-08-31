@@ -179,3 +179,4 @@
 - [x] Revalidar visualmente os estados pago, em dia e vencido por célula, mantendo a validação da coluna I e o layout.
 - [x] Testar a nova versão por validação estrutural e abertura em leitores diferentes antes da entrega.
 - [x] Fazer a coluna I indicar VENCIDO automaticamente quando a linha B:H estiver vermelha por vencimento, mantendo EM DIA/PAGO e preservando a validação de dados.
+- [x] Replicar o resumo visual de compras realizadas nas próximas três categorias do Dashboard, exibindo contagens dinâmicas conforme a planilha importada e preservando layout/estrutura.
