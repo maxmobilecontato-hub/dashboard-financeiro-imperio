@@ -167,4 +167,6 @@
 - [x] Corrigir a incompatibilidade do XLSX que faz o Microsoft Excel reportar corrupção/recuperação no arquivo de status automático.
 - [x] Revalidar a abertura no LibreOffice e a estrutura XML do arquivo corrigido, preservando gráficos, layout e automação da aba BOLETOS A PAGAR- AGOSTO.
 - [ ] Confirmar no Microsoft Excel real a abertura da nova reconstrução independente; o ambiente atual não possui Excel para executar essa validação final.
+- [x] Aplicar regra automática de vencimento equivalente ao padrão da linha 33 na aba BOLETOS A PAGAR- AGOSTO, com bolinha e linha vermelhas quando F chegar ou passar de TODAY(), preservando as demais áreas.
+- [x] Ajustar o vencimento automático da linha: quando F chegar ou passar de TODAY(), A fica com bolinha vermelha e B:H ficam vermelhas, preservando o comprovante como prioridade.
 - [x] Testar a nova versão por validação estrutural e abertura em leitores diferentes antes da entrega.
