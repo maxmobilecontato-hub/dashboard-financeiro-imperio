@@ -178,3 +178,4 @@
 - [x] Reaplicar de forma verificável o padrão visual da linha 33 nas linhas atualmente vencidas, com preenchimento B:H vermelho e regra automática para novos vencimentos.
 - [x] Revalidar visualmente os estados pago, em dia e vencido por célula, mantendo a validação da coluna I e o layout.
 - [x] Testar a nova versão por validação estrutural e abertura em leitores diferentes antes da entrega.
+- [x] Fazer a coluna I indicar VENCIDO automaticamente quando a linha B:H estiver vermelha por vencimento, mantendo EM DIA/PAGO e preservando a validação de dados.
