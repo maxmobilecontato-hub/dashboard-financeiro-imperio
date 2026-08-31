@@ -151,3 +151,16 @@
 - [x] Publicar novamente a versão com WouterRouter usando o base path
 - [x] Confirmar no navegador que a URL inicial não retorna 404
 - [x] Confirmar em execução que favicon e assets carregam no subcaminho
+
+## Remoção das faixas coloridas da planilha
+
+- [x] Identificar os preenchimentos e regras que formam as faixas coloridas
+- [x] Remover somente as faixas da área solicitada, preservando status e dados
+- [x] Validar fórmulas, gráficos, layout e símbolos após a alteração
+- [x] Entregar nova cópia do arquivo Excel
+
+## Ajuste solicitado para status automático até a linha 150
+
+- [x] Atualizar somente a aba BOLETOS A PAGAR- AGOSTO até a linha 150: comprovante preenchido deixa B:I verdes e A com ✅; boleto em dia mostra bolinha verde em A; boleto vencido mostra bolinha vermelha em A e B:H vermelhas; H calcula automaticamente os dias até o vencimento; preservar layout, estrutura, dados e gráficos.
+- [x] Ajustar a automação da coluna A para usar o símbolo exato ✅ nos boletos pagos e revalidar o XML/resultado final.
+- [x] Revalidar explicitamente que a automação até a linha 150 preserva as formatações e automações necessárias da área A:I.
