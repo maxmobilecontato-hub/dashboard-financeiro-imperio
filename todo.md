@@ -175,4 +175,6 @@
 - [ ] Solicitar e registrar a confirmação visual no Microsoft Excel da versão final corrigida; o ambiente não possui Excel para executar essa etapa.
 - [x] Na planilha já enviada, sincronizar todas as linhas B:H com a bolinha vermelha de A na aba BOLETOS A PAGAR- AGOSTO.
 - [x] Fazer a coluna I indicar EM DIA automaticamente quando a bolinha da coluna A estiver verde, preservando a validação de dados.
+- [x] Reaplicar de forma verificável o padrão visual da linha 33 nas linhas atualmente vencidas, com preenchimento B:H vermelho e regra automática para novos vencimentos.
+- [x] Revalidar visualmente os estados pago, em dia e vencido por célula, mantendo a validação da coluna I e o layout.
 - [x] Testar a nova versão por validação estrutural e abertura em leitores diferentes antes da entrega.
