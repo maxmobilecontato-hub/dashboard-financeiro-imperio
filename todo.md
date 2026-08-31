@@ -164,3 +164,5 @@
 - [x] Atualizar somente a aba BOLETOS A PAGAR- AGOSTO até a linha 150: comprovante preenchido deixa B:I verdes e A com ✅; boleto em dia mostra bolinha verde em A; boleto vencido mostra bolinha vermelha em A e B:H vermelhas; H calcula automaticamente os dias até o vencimento; preservar layout, estrutura, dados e gráficos.
 - [x] Ajustar a automação da coluna A para usar o símbolo exato ✅ nos boletos pagos e revalidar o XML/resultado final.
 - [x] Revalidar explicitamente que a automação até a linha 150 preserva as formatações e automações necessárias da área A:I.
+- [x] Corrigir a incompatibilidade do XLSX que faz o Microsoft Excel reportar corrupção/recuperação no arquivo de status automático.
+- [x] Revalidar a abertura no LibreOffice e a estrutura XML do arquivo corrigido, preservando gráficos, layout e automação da aba BOLETOS A PAGAR- AGOSTO.
